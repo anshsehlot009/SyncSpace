@@ -25,9 +25,9 @@ const Navbar = () => {
         <header className="navbar">
             <nav className="inner">
                 <div className="left">
-                    <div className="brand-logo flex font-bold items-center gap-2">
+                    <div className="brand ">
                         <Box className="logo" />
-                        <span className="name">Roomify</span>
+                        <span className="name">SyncSpace</span>
                     </div>
 
                     <ul className="links">
