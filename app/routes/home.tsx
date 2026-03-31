@@ -1,7 +1,10 @@
 import type { Route } from "./+types/home";
+import {useState} from "react";
 import Navbar from "../../components/Navbar";
 import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react"; // ✅ removed unused Section import
 import Button from "../../ui/Button";
+import Upload from "../../components/Upload";
+import {useNavigate} from "react-router";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -11,6 +14,19 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+
+    const navigate = useNavigate();
+    const [uploadedBase64, setUploadedBase64] = useState<string | null>(null);
+
+    const handleUploadComplete = (base64Data: string) => {
+        const newId = Date.now().toString();
+
+        sessionStorage.setItem(`upload_${newId}`, base64Data); // store it here
+
+        navigate(`/visualizer/${newId}`); // only ID in the URL
+        return true;
+    };
+
     return (
         <div className="home">
             <Navbar />
@@ -40,7 +56,7 @@ export default function Home() {
                     </Button>
                 </div>
 
-                {/* UPLOAD SHELL */}
+
                 <div id="upload" className="upload-shell">
                     <div className="grid-overlay"></div>
 
@@ -52,7 +68,10 @@ export default function Home() {
                             <h3>Upload Your Floor Plan</h3>
                             <p>Supports JPG, PNG formats up to 10MB</p>
                         </div>
-                        <p>Upload Images</p>
+                    <Upload onComplete={handleUploadComplete}/>
+                        {uploadedBase64 ? (
+                            <p className="help">Upload complete. Base64 data is ready for the next step.</p>
+                        ) : null}
                     </div>
                 </div>
             </section>
