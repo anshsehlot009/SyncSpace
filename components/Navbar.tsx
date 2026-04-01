@@ -18,7 +18,7 @@ const Navbar = () => {
        try {
        await signIn();
        }catch (e){
-       console.error(`puter sign out failed!${e}`);
+       console.error(`puter sign in failed!${e}`);
    }
 };
     return (
@@ -63,4 +63,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
