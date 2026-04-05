@@ -1,151 +1,158 @@
 import type { Route } from "./+types/home";
-import { useState } from "react";
 import Navbar from "../../components/Navbar";
-import { ArrowRight, ArrowUpRight, Clock, Layers } from "lucide-react";
-import Button from "../../ui/Button";
+import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
 import Upload from "../../components/Upload";
-import { useNavigate } from "react-router";
-import { createProject } from "../../lib/puter.action";
+import Button from "../../ui/Button";
+import {useNavigate} from "react-router";
+import {useEffect, useRef, useState} from "react";
+import {createProject, getProjects} from "../../lib/puter.action";
 
 export function meta({}: Route.MetaArgs) {
     return [
-        { title: "SyncSpace" },
-        { name: "description", content: "Welcome to SyncSpace!" },
+        { title: "New React Router App" },
+        { name: "description", content: "Welcome to React Router!" },
     ];
 }
 
 export default function Home() {
-
     const navigate = useNavigate();
+    const [projects, setProjects] = useState<DesignItem[]>([]);
+    const isCreatingProjectRef = useRef(false);
 
-    const [project, setProject] = useState<DesignItem[]>([]);
+    const handleUploadComplete = async (base64Image: string) => {
+        try {
 
+            if(isCreatingProjectRef.current) return false;
+            isCreatingProjectRef.current = true;
+            const newId = Date.now().toString();
+            const name = `Residence ${newId}`;
 
-    const [uploadedBase64, setUploadedBase64] = useState<string | null>(null);
+            const newItem = {
+                id: newId, name, sourceImage: base64Image,
+                renderedImage: undefined,
+                timestamp: Date.now()
+            }
 
-    const handleUploadComplete = async (base64Data: string) => {
-        const newId = Date.now().toString();
-        const name = `Residence${newId}`;
-        const newItem = {
-            id: newId,
-            name,
-            sourceImage: base64Data,
-            renderedImage: undefined,
-            timestamp: Date.now(),
-        };
+            const saved = await createProject({ item: newItem, visibility: 'private' });
 
-        const saved = await createProject({ item: newItem, visibility: "private" });
-        if (!saved) {
-            console.warn("Failed to create project. Showing local preview.");
+            if(!saved) {
+                console.error("Failed to create project");
+                return false;
+            }
+
+            setProjects((prev) => [saved, ...prev]);
+
+            navigate(`/visualizer/${saved.id ?? newId}`, {
+                state: {
+                    initialImage: saved.sourceImage ?? base64Image,
+                    initialRendered: saved.renderedImage || null,
+                    name: saved.name ?? name
+                }
+            });
+
+            return true;
+        } finally {
+            isCreatingProjectRef.current = false;
+        }
+    }
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            const items = await getProjects();
+
+            setProjects(items)
         }
 
-        setProject((prev) => [newItem, ...prev]);
-
-        sessionStorage.setItem(`upload_${newId}`, base64Data);
-
-        navigate(`/visualizer/${newId}`,{
-            state :{
-                initialImage : saved?.sourceImage || base64Data,
-                initialRendered : saved?.renderedImage || null,
-                name
-            }
-        }); // only ID in the URL
-        return true;
-    };
+        fetchProjects();
+    }, []);
 
     return (
         <div className="home">
             <Navbar />
-
 
             <section className="hero">
                 <div className="announce">
                     <div className="dot">
                         <div className="pulse"></div>
                     </div>
-                    <p>Introducing SyncSpace 2.0</p>
+
+                    <p>Introducing Roomify 2.0</p>
                 </div>
 
-                <h1>Build Beautiful Spaces at the Speed of Thought with SyncSpace.</h1>
+                <h1>Build beautiful spaces at the speed of thought with Roomify</h1>
 
                 <p className="subtitle">
-                    SyncSpace is an AI-first design environment that helps you visualize,
-                    render, and ship architectural projects faster than ever.
+                    Roomify is an AI-first design environment that helps you visualize, render, and ship architectural projects faster  than ever.
                 </p>
 
                 <div className="actions">
                     <a href="#upload" className="cta">
                         Start Building <ArrowRight className="icon" />
                     </a>
+
                     <Button variant="outline" size="lg" className="demo">
                         Watch Demo
                     </Button>
                 </div>
 
-
                 <div id="upload" className="upload-shell">
-                    <div className="grid-overlay"></div>
+                    <div className="grid-overlay" />
 
                     <div className="upload-card">
                         <div className="upload-head">
                             <div className="upload-icon">
                                 <Layers className="icon" />
                             </div>
-                            <h3>Upload Your Floor Plan</h3>
-                            <p>Supports JPG, PNG formats up to 10MB</p>
+
+                            <h3>Upload your floor plan</h3>
+                            <p>Supports JPG, PNG, formats up to 10MB</p>
                         </div>
-                    <Upload onComplete={handleUploadComplete} />
-                        {uploadedBase64 ? (
-                            <p className="help">Upload complete. Base64 data is ready for the next step.</p>
-                        ) : null}
+
+                        <Upload onComplete={handleUploadComplete} />
                     </div>
                 </div>
             </section>
-
 
             <section className="projects">
                 <div className="section-inner">
                     <div className="section-head">
                         <div className="copy">
                             <h2>Projects</h2>
-                            <p>Your Latest Work and Shared Community Projects, all in one Place</p>
+                            <p>Your latest work and shared community projects, all in one place.</p>
                         </div>
                     </div>
 
                     <div className="projects-grid">
-                        {project.map(({id,name, renderedImage, sourceImage, timestamp})=>(
-                            <div className="project-card group" key={id}>
-                            <div className=" preview">
-                            <img
-                            src={renderedImage || sourceImage}
-                            alt="Project "
-                            />
-                            <div className="badge">
-                            <span>Community</span>
+                        {projects.map(({id, name, renderedImage, sourceImage, timestamp}) => (
+                            <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
+                                <div className="preview">
+                                    <img  src={renderedImage || sourceImage} alt="Project"
+                                    />
+
+                                    <div className="badge">
+                                        <span>Community</span>
+                                    </div>
+                                </div>
+
+                                <div className="card-body">
+                                    <div>
+                                        <h3>{name}</h3>
+
+                                        <div className="meta">
+                                            <Clock size={12} />
+                                            <span>{new Date(timestamp).toLocaleDateString()}</span>
+                                            <span>By JS Mastery</span>
+                                        </div>
+                                    </div>
+                                    <div className="arrow">
+                                        <ArrowUpRight size={18} />
+                                    </div>
+                                </div>
                             </div>
-                            </div>
-                            <div className="card-body">
-                            <div>
-                            <h3> { name} </h3>
-                            <div className="meta">
-                            <Clock size={12}/>
-                    <span>{new Date(timestamp).toLocaleDateString()}
-                    </span>
-                    <span>Aeiforia Architects</span>
-                </div>
-        </div>
-               <div className="arrow">
-              <ArrowUpRight size={18}/>
-              </div>
-                </div>
-                  </div>
-
-
-                   ))}
-
+                        ))}
                     </div>
                 </div>
             </section>
         </div>
-    );
+    )
 }
