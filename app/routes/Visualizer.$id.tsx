@@ -1,13 +1,14 @@
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { generate3DView } from "../../lib/ai.action";
+import { getProjectById } from "../../lib/puter.action";
 import {Box, Download, RefreshCcw, Share2, X} from "lucide-react";
 import Button from "../../ui/Button";
 
 const VisualizerId = () => {
-    const location = useLocation();
+    const { id } = useParams();
     const navigate = useNavigate();
-
+    const location = useLocation();
     const state =
         location.state as
             | (VisualizerLocationState & { initialRendered?: string | null })
@@ -16,14 +17,38 @@ const VisualizerId = () => {
     const initialImage = state?.initialImage ?? null;
     const initialRender = state?.initialRender ?? state?.initialRendered ?? null;
     const name = state?.name ?? null;
-    const projectName = name || "Untitled Project";
 
     const hasInitialGenerated = useRef(false);
-
+    const [project, setProject] = useState<DesignItem|null>(null);
+    const [isProjectLoading, setIsProjectLoading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [currentImage, setCurrentImage] = useState<string | null>(
-        initialRender || null
-    );
+    const [currentImage, setCurrentImage] = useState<string | null>( null);
+
+    const resolvedInitialImage = initialImage ?? project?.sourceImage ?? null;
+    const resolvedInitialRender = initialRender ?? project?.renderedImage ?? null;
+    const projectName = name || project?.name || "Untitled Project";
+
+    useEffect(() => {
+        if (!id || initialImage) return;
+        let isActive = true;
+
+        const fetchProject = async () => {
+            setIsProjectLoading(true);
+            const fetched = await getProjectById({ id });
+            if (!isActive) return;
+            setProject(fetched);
+            setIsProjectLoading(false);
+            if (fetched?.renderedImage) {
+                setCurrentImage((prev) => prev ?? fetched.renderedImage);
+            }
+        };
+
+        fetchProject();
+
+        return () => {
+            isActive = false;
+        };
+    }, [id, initialImage]);
 
     const handleBack = useCallback(() => navigate("/"), [navigate]);
     const handleExport = useCallback(() => {
@@ -59,13 +84,13 @@ const VisualizerId = () => {
     }, [currentImage, projectName]);
 
     const runGeneration = useCallback(async () => {
-        if (!initialImage) return;
+        if (!resolvedInitialImage) return;
 
         try {
             setIsProcessing(true);
 
             const result = await generate3DView({
-                sourceImage: initialImage,
+                sourceImage: resolvedInitialImage,
             });
 
             if (result?.renderedImage) {
@@ -76,20 +101,20 @@ const VisualizerId = () => {
         } finally {
             setIsProcessing(false);
         }
-    }, [initialImage]);
+    }, [resolvedInitialImage]);
 
     useEffect(() => {
-        if (!initialImage || hasInitialGenerated.current) return;
+        if (!resolvedInitialImage || hasInitialGenerated.current) return;
 
-        if (initialRender) {
-            setCurrentImage(initialRender);
+        if (resolvedInitialRender) {
+            setCurrentImage(resolvedInitialRender);
             hasInitialGenerated.current = true;
             return;
         }
 
         hasInitialGenerated.current = true;
         runGeneration();
-    }, [initialImage, initialRender, runGeneration]);
+    }, [resolvedInitialImage, resolvedInitialRender, runGeneration]);
 
     return (
         <section>
@@ -143,14 +168,14 @@ const VisualizerId = () => {
                             </div>
                         </div>
 
-                        <div className={`render-area $ {isProcessing? 'is-processing':''}`}>
+                        <div className={`render-area ${isProcessing ? "is-processing" : ""}`}>
                             {currentImage? (
                                 <img  src={currentImage} alt="Ai Render"
                                 className="render-img"/>
                             ):(
                                 <div className="render-placeholder">
-                                    {initialImage && (
-                                        < img src={initialImage} alt="original "
+                                    {resolvedInitialImage && (
+                                        <img src={resolvedInitialImage} alt="original "
                                         className="render-fallback"/>
                                     )}
                                 </div>
@@ -171,17 +196,17 @@ const VisualizerId = () => {
                     </div>
                 </section>
 
-                {initialImage ? (
+                {resolvedInitialImage ? (
                     <div className="image-container">
                         <h2>{name || "Uploaded Image"}</h2>
                         <img
-                            src={initialImage}
+                            src={resolvedInitialImage}
                             alt={name || "Uploaded"}
                             style={{ maxWidth: "100%", height: "auto" }}
                         />
                     </div>
                 ) : (
-                    <p>No image uploaded</p>
+                    <p>{isProjectLoading ? "Loading project..." : "No image uploaded"}</p>
                 )}
 
                 {isProcessing && <p>Generating 3D view...</p>}
