@@ -20,15 +20,18 @@ const VisualizerId = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentImage, setCurrentImage] = useState<string | null>(null);
 
-    const compareBefore = project?.sourceImage ?? null;
-    const compareAfter = currentImage ?? project?.renderedImage ?? null;
+    const displayedProject = project?.id === id ? project : null;
+    const displayedImage = project?.id === id ? currentImage : null;
+
+    const compareBefore = displayedProject?.sourceImage ?? null;
+    const compareAfter = displayedImage ?? displayedProject?.renderedImage ?? null;
 
     const handleBack = () => navigate('/');
     const handleExport = () => {
-        if (!currentImage) return;
+        if (!displayedImage) return;
 
         const link = document.createElement('a');
-        link.href = currentImage;
+        link.href = displayedImage;
         link.download = `roomify-${id || 'design'}.png`;
         document.body.appendChild(link);
         link.click();
@@ -70,6 +73,7 @@ const VisualizerId = () => {
 
     useEffect(() => {
         let isMounted = true;
+        setIsProcessing(false);
 
         const loadProject = async () => {
             if (!id) {
@@ -132,7 +136,7 @@ const VisualizerId = () => {
                     <div className="panel-header">
                         <div className="panel-meta">
                             <p>Project</p>
-                            <h2>{project?.name || `Residence ${id}`}</h2>
+                            <h2>{displayedProject?.name || `Residence ${id}`}</h2>
                             <p className="note">Created by You</p>
                         </div>
 
@@ -141,7 +145,7 @@ const VisualizerId = () => {
                                 size="sm"
                                 onClick={handleExport}
                                 className="export"
-                                disabled={!currentImage}
+                                disabled={!displayedImage}
                             >
                                 <Download className="w-4 h-4 mr-2" /> Export
                             </Button>
@@ -159,12 +163,12 @@ const VisualizerId = () => {
                     </div>
 
                     <div className={`render-area ${isProcessing ? 'is-processing': ''}`}>
-                        {currentImage ? (
-                            <img src={currentImage} alt="AI Render" className="render-img" />
+                        {displayedImage ? (
+                            <img src={displayedImage} alt="AI Render" className="render-img" />
                         ) : (
                             <div className="render-placeholder">
-                                {project?.sourceImage && (
-                                    <img src={project?.sourceImage} alt="Original" className="render-fallback" />
+                                {displayedProject?.sourceImage && (
+                                    <img src={displayedProject?.sourceImage} alt="Original" className="render-fallback" />
                                 )}
                             </div>
                         )}
