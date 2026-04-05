@@ -76,13 +76,13 @@ export default function Home() {
                         <div className="pulse"></div>
                     </div>
 
-                    <p>Introducing Roomify 2.0</p>
+                    <p>Introducing Sync Space 2.0</p>
                 </div>
 
-                <h1>Build beautiful spaces at the speed of thought with Roomify</h1>
+                <h1>Build beautiful spaces at the speed of thought with Sync Space</h1>
 
                 <p className="subtitle">
-                    Roomify is an AI-first design environment that helps you visualize, render, and ship architectural projects faster  than ever.
+                    Sync Space is an AI-first design environment that helps you visualize, render, and ship architectural projects faster than ever.
                 </p>
 
                 <div className="actions">
