@@ -20,6 +20,9 @@ const VisualizerId = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentImage, setCurrentImage] = useState<string | null>(null);
 
+    const compareBefore = project?.sourceImage ?? null;
+    const compareAfter = currentImage ?? project?.renderedImage ?? null;
+
     const handleBack = () => navigate('/');
     const handleExport = () => {
         if (!currentImage) return;
@@ -142,7 +145,13 @@ const VisualizerId = () => {
                             >
                                 <Download className="w-4 h-4 mr-2" /> Export
                             </Button>
-                            <Button size="sm" onClick={() => {}} className="share">
+                            <Button
+                                size="sm"
+                                className="share"
+                                disabled
+                                aria-disabled="true"
+                                title="Share is not available yet"
+                            >
                                 <Share2 className="w-4 h-4 mr-2" />
                                 Share
                             </Button>
@@ -183,21 +192,21 @@ const VisualizerId = () => {
                     </div>
 
                     <div className="compare-stage">
-                        {project?.sourceImage && currentImage ? (
+                        {compareBefore && compareAfter ? (
                             <ReactCompareSlider
-                                defaultValue={50}
-                                style={{ width: '100%', height: 'auto' }}
+                                defaultPosition={50}
+                                style={{ width: '100%' }}
                                 itemOne={
-                                    <ReactCompareSliderImage src={project?.sourceImage} alt="before" className="compare-img" />
+                                    <ReactCompareSliderImage src={compareBefore} alt="before" className="compare-img" />
                                 }
                                 itemTwo={
-                                    <ReactCompareSliderImage src={currentImage || project?.renderedImage} alt="after" className="compare-img" />
+                                    <ReactCompareSliderImage src={compareAfter} alt="after" className="compare-img" />
                                 }
                             />
                         ) : (
                             <div className="compare-fallback">
-                                {project?.sourceImage && (
-                                    <img src={project.sourceImage} alt="Before" className="compare-img" />
+                                {compareBefore && (
+                                    <img src={compareBefore} alt="Before" className="compare-img" />
                                 )}
                             </div>
                         )}
