@@ -1,8 +1,8 @@
 import type { Route } from "./+types/home";
 import Navbar from "../../components/Navbar";
 import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
-import Upload from "../../components/Upload";
 import Button from "../../ui/Button";
+import Upload from "../../components/Upload";
 import {useNavigate} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import {createProject, getProjects} from "../../lib/puter.action";
@@ -42,11 +42,11 @@ export default function Home() {
 
             setProjects((prev) => [saved, ...prev]);
 
-            navigate(`/visualizer/${saved.id ?? newId}`, {
+            navigate(`/visualizer/${newId}`, {
                 state: {
-                    initialImage: saved.sourceImage ?? base64Image,
+                    initialImage: saved.sourceImage,
                     initialRendered: saved.renderedImage || null,
-                    name: saved.name ?? name
+                    name
                 }
             });
 

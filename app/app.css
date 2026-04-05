@@ -385,7 +385,7 @@
         }
 
         .compare-stage {
-          @apply relative bg-zinc-100 overflow-hidden;
+          @apply relative bg-zinc-100 overflow-hidden min-h-105;
         }
 
         .compare-fallback {
